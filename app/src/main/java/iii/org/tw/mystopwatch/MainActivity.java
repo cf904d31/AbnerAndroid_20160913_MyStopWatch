@@ -6,19 +6,28 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ListView;
+import android.widget.SimpleAdapter;
 import android.widget.TextView;
 
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Timer;
 import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
     private Button btnLeft , btnRight;
+    private ListView lapList;
     private TextView showTime;
     private boolean isRunning;
     private Timer timer;
     private MyTask myTask;
     private MyHandler myHandler;
     private int counter;
+    private SimpleAdapter adapter;
+    private String[] from = {"title"};
+    private int[] to = {R.id.lap_item};
+    private LinkedList<HashMap<String,String>> data;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -27,7 +36,8 @@ public class MainActivity extends AppCompatActivity {
         btnLeft = (Button) findViewById(R.id.btnLeft);
         btnRight = (Button) findViewById(R.id.btnRight);
         showTime = (TextView) findViewById(R.id.showTime);
-
+        lapList = (ListView) findViewById(R.id.lapList);
+        initLapList();
         timer = new Timer();
         myHandler = new MyHandler();
 
@@ -44,6 +54,13 @@ public class MainActivity extends AppCompatActivity {
         super.finish();
     }
 
+    private void initLapList() {
+        data = new LinkedList<>();
+        adapter = new SimpleAdapter(this,data,R.layout.layout_lapitem,from,to);
+        lapList.setAdapter(adapter);
+    }
+
+
     public void doRight(View v) {
         isRunning = !isRunning;
         btnRight.setText(isRunning?"Stop":"Start");
@@ -57,9 +74,9 @@ public class MainActivity extends AppCompatActivity {
 
     public void doLeft(View v) {
         if (isRunning) {
-            doReset();
-        } else {
             doLap();
+        } else {
+            doReset();
         }
     }
 
@@ -73,16 +90,21 @@ public class MainActivity extends AppCompatActivity {
             myTask.cancel();
             myTask = null;
         }
-        counter = 0;
-        myHandler.sendEmptyMessage(113);
+
     }
 
     private void doLap() {
-
+        HashMap<String,String> hdata = new HashMap<>();
+        hdata.put(from[0],""+counter);
+        data.add(0,hdata);
+        adapter.notifyDataSetChanged();
     }
 
     private void doReset() {
-
+        counter = 0;
+        myHandler.sendEmptyMessage(113);
+        data.clear();
+        adapter.notifyDataSetChanged();
     }
 
     private class MyTask extends TimerTask {
